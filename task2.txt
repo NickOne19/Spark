@@ -1,0 +1,33 @@
+task2.1
+val rdd = sc.textFile("/mnt/d/scala/RDD.txt")
+
+// 2. Подсчитать количество строк
+val lineCount = rdd.count()
+
+//3.
+val Word= "good"
+val Count= rdd.filter(_.toLowerCase.contains(Word)).count()
+println(s"Количество вхождений слова '$Word' в заданном файле: $Count")
+val words_rdd = rdd.flatMap(_.split("\\s+")).filter(_.nonEmpty).collect()
+
+
+task2.2
+// 1. Создание двух списков
+val list1 = List(("a", 1), ("b", 2), ("c", 3))
+val list2 = List(("a", 4), ("b", 5), ("c", 6), ("d", 7), ("e", 8))
+
+// 2. Создание RDD из списков
+val rddList1 = sc.parallelize(list1)
+val rddList2 = sc.parallelize(list2)
+
+// 3. Объединить два списка
+val combinedRDD = rddList1.union(rddList2)
+
+// 4. Агрегировать по ключу
+val aggregatedRDD = combinedRDD.reduceByKey((x, y) => x + y)
+
+// 5. Сортировать в порядке убывания
+val sortedRDD = aggregatedRDD.map(_.swap).sortByKey(false).map(_.swap)
+
+// Печать результата
+sortedRDD.collect().foreach(println)

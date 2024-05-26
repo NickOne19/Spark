@@ -1,0 +1,27 @@
+import org.apache.spark.sql.SparkSession
+import org.apache.spark.sql.functions._
+
+val spark = SparkSession.builder.appName("Student DataFrame Tasks").getOrCreate()
+
+// Чтение данных из файла CSV
+val filePath = "/mnt/d/scala/students.csv"
+val df = spark.read.option("header", "true").option("inferSchema", "true").csv(filePath)
+
+df.show()
+
+// Найдите имена всех студентов, чей рейтинг по Java превышает 60%
+val highJavaStudents = df.filter(col("Java") > 60).select("name")
+highJavaStudents.show()
+
+// Найти информацию обо всех студентах, у которых оценка по Python выше среднего
+val averagePython = df.agg(avg("Python").alias("avg_python")).first().getDouble(0)
+val highPythonStudents = df.filter(col("Python") > averagePython)
+highPythonStudents.show()
+
+// Найти Jack и заменить очки по PHP на 5
+val updatedDF = df.withColumn("PHP", when(col("name") === "Jack", 5).otherwise(col("PHP")))
+updatedDF.show()
+
+// Получить подтаблицу, содержащую только столбцы name и python
+val namePythonDF = df.select("name", "Python")
+namePythonDF.show()

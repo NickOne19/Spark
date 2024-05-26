@@ -1,0 +1,38 @@
+import org.apache.spark.sql.SparkSession
+import org.apache.spark.sql.functions._
+
+val spark = SparkSession.builder.appName("Country DataFrame Tasks").getOrCreate()
+
+// Чтение данных из файла CSV
+val filePath = "/mnt/d/scala/countries.csv"
+val df = spark.read.option("header", "true").option("inferSchema", "true").csv(filePath)
+
+df.show()
+
+// Найдите имена стран, население которых превышает 75000
+val highPopulationCountries = df.filter(col("Population") > 75000).select("Country")
+highPopulationCountries.show()
+
+// Найти страны Ближнего Востока и Африки, площадь которых выше средней площади этих регионов
+val targetRegions = Seq("NEAR EAST", "AFRICA")
+
+// Фильтрация по регионам
+val regionDF = df.filter(col("Region").isin(targetRegions: _*))
+
+// Вычисление средней площади по регионам
+val averageArea = regionDF.groupBy("Region").agg(avg("Area").alias("avg_area"))
+
+// Соединение с исходным DataFrame и фильтрация по средней площади
+val largerThanAverageArea = regionDF.join(averageArea, "Region")
+  .filter(col("Area") > col("avg_area"))
+  .select("Country", "Region", "Area")
+
+largerThanAverageArea.show()
+
+// Найти Bahrein и заменить его численность на 999
+val updatedDF = df.withColumn("Population", when(col("Country") === "Bahrein", 999).otherwise(col("Population")))
+updatedDF.show()
+
+// Получить подтаблицу, содержащую только столбцы Country и Area
+val countryAreaDF = df.select("Country", "Area")
+countryAreaDF.show()

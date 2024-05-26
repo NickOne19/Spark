@@ -1,0 +1,26 @@
+import org.apache.spark.sql.SparkSession
+import org.apache.spark.sql.functions._
+
+val spark = SparkSession.builder.appName("Country DataFrame Tasks").getOrCreate()
+
+// Чтение данных из файла CSV
+val filePath = "/mnt/d/scala/countries.csv"
+val df = spark.read.option("header", "true").option("inferSchema", "true").csv(filePath)
+
+df.show()
+
+// Найти все страны, площадь которых превышает 30000
+val largeCountries = df.filter(col("Площадь") > 30000).select("Название")
+largeCountries.show()
+
+// Вывести страны Карибского региона, площадь которых больше 200
+val caribbeanCountries = df.filter(col("Регион") === "Caribbean" && col("Площадь") > 200).select("Название")
+caribbeanCountries.show()
+
+// Найти Andorra и заменить её площадь на 555
+val updatedDF = df.withColumn("Площадь", when(col("Название") === "Andorra", 555).otherwise(col("Площадь")))
+updatedDF.show()
+
+// Получить подтаблицу, содержащую только столбцы Континент и Регион
+val continentRegionDF = df.select("Континент", "Регион").distinct()
+continentRegionDF.show()
